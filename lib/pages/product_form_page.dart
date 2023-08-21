@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shop/models/product_list.dart';
 
 import '../models/product.dart';
 
@@ -26,6 +28,27 @@ class _ProductFormPageState extends State<ProductFormPage> {
     super.initState();
 
     _imageUrlFocus.addListener(updateImage);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_formData.isEmpty) {
+      final arg = ModalRoute.of(context)?.settings.arguments;
+
+      if (arg != null) {
+        final product = arg as Product;
+        _formData["id"] = product.id;
+        _formData["name"] = product.name;
+        _formData["price"] = product.price;
+        _formData["description"] = product.description;
+        _formData["imageUrl"] = product.imageUrl;
+
+
+        _imageUrlController.text = product.imageUrl;
+      }
+    }
   }
 
   @override
@@ -57,12 +80,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
       return;
     }
     _formKey.currentState?.save();
-    final newProduct = Product(
-        id: Random().nextDouble().toString(),
-        name: _formData["name"] as String,
-        description: _formData["description"] as String,
-        price: _formData["price"] as double,
-        imageUrl: _formData["imageUrl"] as String);
+
+    Provider.of<ProductList>(context, listen: false)
+        .saveProductFromData(_formData);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -71,7 +92,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
       appBar: AppBar(
         title: const Text("Formulario de Produto"),
         actions: [
-          IconButton(onPressed: () => _submitForm(), icon: Icon(Icons.save))
+          IconButton(
+              onPressed: () => _submitForm(), icon: const Icon(Icons.save))
         ],
       ),
       body: Padding(
@@ -81,6 +103,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
           child: ListView(
             children: [
               TextFormField(
+                initialValue: _formData["name"]?.toString(),
                 decoration: const InputDecoration(labelText: "Nome"),
                 textInputAction: TextInputAction.next,
                 onFieldSubmitted: (_) {
@@ -101,6 +124,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 },
               ),
               TextFormField(
+                initialValue: _formData["price"]?.toString(),
                 decoration: const InputDecoration(labelText: "Preço"),
                 textInputAction: TextInputAction.next,
                 focusNode: _priceFocus,
@@ -123,6 +147,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 },
               ),
               TextFormField(
+                initialValue: _formData["description"]?.toString(),
                   decoration: const InputDecoration(labelText: "Descrição"),
                   textInputAction: TextInputAction.next,
                   focusNode: _descriptionFocus,
