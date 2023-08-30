@@ -1,12 +1,12 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shop/models/cart_item.dart';
 import 'package:shop/utils/constants.dart';
 
 import 'cart.dart';
 import 'order.dart';
-import 'package:http/http.dart' as http;
 
 class OrderList with ChangeNotifier {
   final List<Order> _items = [];
@@ -17,6 +17,36 @@ class OrderList with ChangeNotifier {
 
   int get itemsCount {
     return _items.length;
+  }
+
+  Future<void> loadOrders() async {
+    _items.clear();
+
+    final response =
+        await http.get(Uri.parse("${Constants.ORDER_BASE_URL}.json"));
+
+    if (response.body == "null") return;
+
+    Map<String, dynamic> data = jsonDecode(response.body);
+
+    data.forEach((orderId, orderData) {
+      List<dynamic> products = orderData["products"];
+
+      _items.add(Order(
+          id: orderId,
+          total: orderData["total"],
+          products: products
+              .map((product) => CartItem(
+                  id: product["id"],
+                  productId: product["productId"],
+                  name: product["name"],
+                  quantity: int.parse(product["quantity"].toString()),
+                  price: product["price"]))
+              .toList(),
+          date: DateTime.parse(orderData["date"])));
+    });
+
+    notifyListeners();
   }
 
   Future<void> addOrder(Cart cart) async {
@@ -32,7 +62,7 @@ class OrderList with ChangeNotifier {
                         "id": cartItem.id,
                         "productId": cartItem.productId,
                         "name": cartItem.name,
-                        "quantyty": cartItem.quantity,
+                        "quantity": cartItem.quantity,
                         "price": cartItem.price,
                       })
                   .toList()
