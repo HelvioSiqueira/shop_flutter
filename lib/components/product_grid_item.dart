@@ -4,6 +4,7 @@ import 'package:shop/utils/app_routes.dart';
 
 import '../models/cart.dart';
 import '../models/product.dart';
+import '../models/product_list.dart';
 
 class ProductGridItem extends StatelessWidget {
   const ProductGridItem({super.key});
@@ -24,16 +25,14 @@ class ProductGridItem extends StatelessWidget {
             style: const TextStyle(fontFamily: 'Lato', fontSize: 12),
           ),
           leading: Consumer<Product>(
-            builder: (context, product, child) =>
-                IconButton(
-                  onPressed: () {
-                    product.toggleFavorite();
-                  },
-                  icon: Icon(
-                      product.isFavorite ? Icons.favorite : Icons
-                          .favorite_border),
-                  color: Colors.deepOrange,
-                ),
+            builder: (context, product, child) => IconButton(
+              onPressed: () {
+                product.toggleFavorite();
+              },
+              icon: Icon(
+                  product.isFavorite ? Icons.favorite : Icons.favorite_border),
+              color: Colors.deepOrange,
+            ),
           ),
           trailing: IconButton(
             icon: const Icon(Icons.shopping_cart),
@@ -42,16 +41,15 @@ class ProductGridItem extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: const Text("Produto adicionado com sucesso"),
                 duration: const Duration(seconds: 2),
-                action: SnackBarAction(label: "DESFAZER", onPressed: () {
-                  cart.removeSingleItem(product.id);
-                }),
+                action: SnackBarAction(
+                    label: "DESFAZER",
+                    onPressed: () {
+                      cart.removeSingleItem(product.id);
+                    }),
               ));
               cart.addItem(product);
             },
-            color: Theme
-                .of(context)
-                .colorScheme
-                .secondary,
+            color: Theme.of(context).colorScheme.secondary,
           ),
         ),
         child: GestureDetector(

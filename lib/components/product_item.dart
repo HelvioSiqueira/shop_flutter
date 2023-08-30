@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop/exceptions/http_exception.dart';
 import 'package:shop/models/product_list.dart';
 
 import '../models/product.dart';
@@ -17,6 +18,8 @@ class ProductItem extends StatefulWidget {
 class _ProductItemState extends State<ProductItem> {
   @override
   Widget build(BuildContext context) {
+    final msg = ScaffoldMessenger.of(context);
+
     return ListTile(
       leading: CircleAvatar(
         backgroundImage: NetworkImage(widget.product.imageUrl),
@@ -47,19 +50,26 @@ class _ProductItemState extends State<ProductItem> {
                             actions: [
                               TextButton(
                                   onPressed: () {
-                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop(false);
                                   },
                                   child: const Text("Não")),
                               TextButton(
                                   onPressed: () {
-                                    Provider.of<ProductList>(context,
-                                            listen: false)
-                                        .removeProduct(widget.product.id);
-                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop(true);
                                   },
                                   child: const Text("Sim"))
                             ],
-                          ));
+                          )).then((value) async {
+                    if (value ?? false) {
+                      try {
+                        await Provider.of<ProductList>(context, listen: false)
+                            .removeProduct(widget.product);
+                      } on HttpException catch (error) {
+                        msg.showSnackBar(
+                            SnackBar(content: Text(error.toString())));
+                      }
+                    }
+                  });
                 },
                 icon: const Icon(Icons.delete),
                 color: Theme.of(context).colorScheme.error),
